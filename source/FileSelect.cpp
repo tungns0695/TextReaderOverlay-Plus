@@ -1,7 +1,5 @@
 #include <FileSelect.hpp>
-
 #include <filesystem>
-
 #include <FileSelectEntry.hpp>
 #include <CompositeElement.hpp>
 #include <Config.hpp>
@@ -14,10 +12,12 @@ FileSelect::FileSelect(std::string const &path)
       m_failed(false)
 {
     auto favorites = Config::read()["favorites"];
-    if (!favorites.is_array()) {
+    if (!favorites.is_array())
+    {
         favorites = {};
     }
-    auto isFavorite = [favorites](std::string const &path) {
+    auto isFavorite = [favorites](std::string const &path)
+    {
         auto found = std::find(favorites.begin(), favorites.end(), path);
         return found != favorites.end();
     };
@@ -33,55 +33,61 @@ FileSelect::FileSelect(std::string const &path)
                 m_entries.push_back(new FileSelectFileEntry(absolutePath, isFavorite(absolutePath)));
         }
     }
-
     std::sort(
         m_entries.begin(), m_entries.end(),
         [](FileSelectEntry *a, FileSelectEntry *b) { return *a < *b; });
 }
 
-FileSelect::~FileSelect() {
-    for (auto it = m_entries.begin(); it != m_entries.end(); ++it) {
+FileSelect::~FileSelect()
+{
+    for (auto it = m_entries.begin(); it != m_entries.end(); ++it)
+    {
         delete *it;
     }
 }
 
-tsl::elm::Element* FileSelect::createUI() {
+tsl::elm::Element* FileSelect::createUI()
+{
     auto frame = new FileSelectFrame();
 
     auto composite = new CompositeElement();
 
-    composite->addElement(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer* renderer, u16 x, u16 y, u16 w, u16 h) {
-        renderer->drawString(m_path.c_str(), false, 20, 80, 12, a(0xFFFF));
-    }));
+    composite->addElement(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h)
+                                                     { renderer->drawString(m_path.c_str(), false, 20, 80, 12, a(0xFFFF)); }));
 
-    auto list = new tsl::elm::List(7);
+    auto list = new tsl::elm::List();
 
-    for (auto it = m_entries.begin(); it != m_entries.end(); ++it) {
+    for (auto it = m_entries.begin(); it != m_entries.end(); ++it)
+    {
         auto item = new tsl::elm::ListItem((*it)->label());
-        item->setClickListener([it, item](u64 keys) {
-            if (keys & KEY_A) {
-                (*it)->select();
-                return true;
-            }
-            else if (keys & KEY_Y) {
-                (*it)->toggleFavorite();
-                item->setText((*it)->label());
-                return true;
-            }
-            return false;
-        });
+        item->setClickListener([it, item](u64 keys)
+                               {
+                                   if (keys & HidNpadButton_A)
+                                   {
+                                       (*it)->select();
+                                       return true;
+                                   }
+                                   else if (keys & HidNpadButton_Y)
+                                   {
+                                       (*it)->toggleFavorite();
+                                       item->setText((*it)->label());
+                                       return true;
+                                   }
+                                   return false;
+                               });
         list->addItem(item);
     }
 
-    composite->addElement(list, 40, 110, tsl::cfg::FramebufferWidth - 80);
+    composite->addElement(list, 40, 110, tsl::cfg::FramebufferWidth - 80, 530);
 
     frame->setContent(composite);
 
     return frame;
 }
 
-void FileSelectFrame::draw(tsl::gfx::Renderer *renderer) {
-    renderer->fillScreen(a({ 0x0, 0x0, 0x0, 0xD }));
+void FileSelectFrame::draw(tsl::gfx::Renderer *renderer)
+{
+    renderer->fillScreen(a({0x0, 0x0, 0x0, 0xD}));
     renderer->drawString("Select File...", false, 20, 50, 30, a(0xFFFF));
     renderer->drawRect(15, 720 - 73, tsl::cfg::FramebufferWidth - 30, 1, a(0xFFFF));
     renderer->drawString("\uE0E3  Favorite", false, 30, 693, 23, a(0xFFFF));

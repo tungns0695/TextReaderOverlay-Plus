@@ -17,7 +17,6 @@ FavoritesMenu::FavoritesMenu() {
         else
             m_entries.push_back(new FileSelectFileEntry(path, true));
     }
-
     m_entries.sort([](FileSelectEntry *a, FileSelectEntry *b) { return *a < *b; });
 }
 
@@ -37,16 +36,16 @@ tsl::elm::Element* FavoritesMenu::createUI() {
         return frame;
     }
 
-    auto list = new tsl::elm::List(7);
+    auto list = new tsl::elm::List();
 
     for (auto it = m_entries.begin(); it != m_entries.end(); ++it) {
         auto item = new tsl::elm::ListItem((*it)->label());
         item->setClickListener([it, item](s64 keys) {
-            if (keys & KEY_A) {
+            if (keys & HidNpadButton_A) {
                 (*it)->select();
                 return true;
             }
-            if (keys & KEY_Y) {
+            if (keys & HidNpadButton_Y) {
                 (*it)->toggleFavorite();
                 item->setText((*it)->label());
                 return true;

@@ -7,7 +7,7 @@ tsl::elm::Element* LogMenu::createUI() {
 
     frame->setContent(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h) {
         Log::forEach([renderer](std::string const &msg, int i) {
-            renderer->drawString(msg.c_str(), false, 20, 80 + i*12, 12, a(0xFFFF));
+            renderer->drawString(msg.c_str(), false, 50, 200 + i*12, 12, a(0xFFFF));
         });
     }));
 

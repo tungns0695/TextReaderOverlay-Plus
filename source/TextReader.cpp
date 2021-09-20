@@ -56,7 +56,7 @@ TextReader::TextReader(std::string const &path)
       m_font("sdmc:/switch/.overlays/TextReaderOverlay/fonts/UbuntuMono/UbuntuMono-Regular.ttf"),
       m_size(10),
       m_panx(0),
-      m_debug(false)
+      m_debug(true)
 {
     auto j = Config::read();
     auto resume = j["files"][m_path].find("resume");
@@ -69,6 +69,7 @@ TextReader::TextReader(std::string const &path)
             m_bookmarks.insert((u32)b);
         }
     }
+    
 }
 TextReader::~TextReader() {
     if (m_file) fclose(m_file);
@@ -77,7 +78,6 @@ TextReader::~TextReader() {
 tsl::elm::Element* TextReader::createUI() {
     return new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h) {
         renderer->fillScreen(a({ 0x0, 0x0, 0x0, 0xD }));
-
         if (!m_loading) {
             renderer->drawString("Loading... May take a few seconds", false, 20, 50, 16, a(0xFFFF));
             m_loading = true;
@@ -131,7 +131,6 @@ tsl::elm::Element* TextReader::createUI() {
 
         u32 progressY = m_lineNum * (tsl::cfg::FramebufferHeight - 20) / m_totalLines;
         renderer->drawRect(0, progressY, 1, 20, a({ 0x8, 0x8, 0x8, 0xF }));
-
         if (m_debug)
             renderer->drawString(std::to_string(m_fps).c_str(), false, tsl::cfg::FramebufferWidth - 20, 10, 10, a(0xFFFF));
     });
@@ -143,68 +142,68 @@ void TextReader::printLn(std::string const &text, s32 x, s32 y, u32 fontSize, ts
     });
 }
 
-bool TextReader::handleInput(u64 keysDown, u64 keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) {
-    if (keysHeld & KEY_ZR) {
-        if (keysHeld & KEY_LSTICK_UP)
+bool TextReader::handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState joyStickPosLeft, HidAnalogStickState joyStickPosRight) {
+    if (keysHeld & HidNpadButton_ZR) {
+        if (keysHeld & HidNpadButton_StickLUp)
             scrollTo(0);
-        if (keysHeld & KEY_LSTICK_DOWN)
+        if (keysHeld & HidNpadButton_StickLDown)
             scroll(m_totalLines);
-        if (keysHeld & KEY_LSTICK_LEFT)
+        if (keysHeld & HidNpadButton_StickLLeft)
             scroll(-1000);
-        if (keysHeld & KEY_LSTICK_RIGHT)
+        if (keysHeld & HidNpadButton_StickLRight)
             scroll(1000);
     }
-    else if (keysHeld & KEY_ZL) {
-        if (keysHeld & KEY_LSTICK_UP)
+    else if (keysHeld & HidNpadButton_ZR) {
+        if (keysHeld & HidNpadButton_StickLUp)
             scroll(-20);
-        if (keysHeld & KEY_LSTICK_DOWN)
+        if (keysHeld & HidNpadButton_StickLDown)
             scroll(20);
-        if (keysHeld & KEY_LSTICK_LEFT)
+        if (keysHeld & HidNpadButton_StickLLeft)
             scroll(-200);
-        if (keysHeld & KEY_LSTICK_RIGHT)
+        if (keysHeld & HidNpadButton_StickLRight)
             scroll(200);
     }
     else {
-        if (keysHeld & KEY_LSTICK_UP)
+        if (keysHeld & HidNpadButton_StickLUp)
             scroll(-2);
-        if (keysHeld & KEY_LSTICK_DOWN)
+        if (keysHeld & HidNpadButton_StickLDown)
             scroll(2);
-        if (keysHeld & KEY_LSTICK_LEFT)
+        if (keysHeld & HidNpadButton_StickLLeft)
             scroll(-1);
-        if (keysHeld & KEY_LSTICK_RIGHT)
+        if (keysHeld & HidNpadButton_StickLRight)
             scroll(1);
     }
 
-    if (keysHeld & KEY_RSTICK_UP)
+    if (keysHeld & HidNpadButton_StickLUp)
         scroll(-1);
-    if (keysHeld & KEY_RSTICK_DOWN)
+    if (keysHeld & HidNpadButton_StickLDown)
         scroll(1);
-    if (keysHeld & KEY_RSTICK_LEFT)
+    if (keysHeld & HidNpadButton_StickLLeft)
         m_panx++;
-    if (keysHeld & KEY_RSTICK_RIGHT)
+    if (keysHeld & HidNpadButton_StickLRight)
         m_panx--;
-    if (keysDown & KEY_RSTICK)
+    if (keysDown & HidNpadButton_StickR)
         m_panx = 0;
 
-    if (keysDown & KEY_DUP)
+    if (keysDown & HidNpadButton_Up)
         m_size++;
-    if (keysDown & KEY_DDOWN)
+    if (keysDown & HidNpadButton_Down)
         m_size--;
 
-    if (keysDown & KEY_X)
+    if (keysDown & HidNpadButton_X)
         tsl::Overlay::get()->hide();
 
-    if (keysDown & KEY_Y)
+    if (keysDown & HidNpadButton_Y)
         toggleBookmark();
-    if (keysDown & KEY_L)
+    if (keysDown & HidNpadButton_L)
         previousBookmark();
-    if (keysDown & KEY_R)
+    if (keysDown & HidNpadButton_R)
         nextBookmark();
 
-    if (keysDown & KEY_B)
+    if (keysDown & HidNpadButton_B)
         close();
 
-    if (keysDown & KEY_MINUS)
+    if (keysDown & HidNpadButton_Minus)
         m_debug = !m_debug;
 
     return true;
